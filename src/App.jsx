@@ -42,6 +42,8 @@ function App() {
   const [isTyping, setIsTyping] = useState(false);
   const [opentDialog, setOpenDialog] = useState(false);
   const [messageDeleteId, setMessageDeleteId] = useState(null);
+  const [editMessageId, setEditMessageId] = useState(null);
+  const [editText, setEditText] = useState("");
   const messagesContainerRef = useRef(null);
 
   // Open Search
@@ -134,10 +136,28 @@ function App() {
     });
   };
 
+  // Edit Functions
   const handleStartEdit = (message) => {
-    console.log("Edit message:", message);
+    setEditMessageId(message.id);
+    setEditText(message.text);
   };
 
+  const handleSaveEdit = () => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === editMessageId ? { ...msg, text: editText } : msg
+      )
+    );
+    setEditMessageId(null);
+    setEditText("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditMessageId(null);
+    setEditText("");
+  };
+
+  // Delete Functions
   const handleOpenDeleteDialog = (id) => {
     setOpenDialog(true);
     setMessageDeleteId(id);
@@ -335,12 +355,51 @@ function App() {
                         borderRadius: 2,
                         wordBreak: "break-word",
                       }}>
-                      <Typography variant='body1'>
-                        {highlightText(
-                          message.text,
-                          openSearch ? searchTerm : ""
-                        )}
-                      </Typography>
+                      {editMessageId === message.id ? (
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 1,
+                          }}>
+                          <TextField
+                            size='small'
+                            fullWidth
+                            multiline
+                            maxRows={4}
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                          />
+
+                          <Box
+                            sx={{
+                              display: "flex",
+                              gap: 1,
+                              justifyContent: "flex-end",
+                            }}>
+                            <Button
+                              size='small'
+                              variant='contained'
+                              onClick={handleSaveEdit}
+                              disabled={!editText.trim()}>
+                              Save
+                            </Button>
+                            <Button
+                              size='small'
+                              variant='outlined'
+                              onClick={handleCancelEdit}>
+                              Cancel
+                            </Button>
+                          </Box>
+                        </Box>
+                      ) : (
+                        <Typography variant='body1'>
+                          {highlightText(
+                            message.text,
+                            openSearch ? searchTerm : ""
+                          )}
+                        </Typography>
+                      )}
                     </Paper>
                     <Typography
                       variant='caption'
@@ -464,7 +523,7 @@ function App() {
           </Typography>
         </Box>
       </Container>
-
+      {/* Dialog For Delete */}
       <Dialog
         open={opentDialog}
         onClose={handleClose}
@@ -475,7 +534,7 @@ function App() {
         </DialogTitle>
         <DialogContent>
           <DialogContentText id='alert-dialog-description'>
-            Are Sure you want to delete this message?
+            Are you Sure?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
