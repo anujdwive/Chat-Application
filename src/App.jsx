@@ -1,16 +1,22 @@
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
+import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import SendIcon from "@mui/icons-material/Send";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import CloseIcon from "@mui/icons-material/Close";
-import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
 import AppBar from "@mui/material/AppBar";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Container from "@mui/material/Container";
+import Fade from "@mui/material/Fade";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
@@ -20,8 +26,6 @@ import TextField from "@mui/material/TextField";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { useEffect, useRef, useState } from "react";
-import Fade from "@mui/material/Fade";
-import CircularProgress from "@mui/material/CircularProgress";
 
 function App() {
   const [messages, setMessages] = useState([
@@ -36,6 +40,8 @@ function App() {
   const [openSearch, setOpenSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [opentDialog, setOpenDialog] = useState(false);
+  const [messageDeleteId, setMessageDeleteId] = useState(null);
   const messagesContainerRef = useRef(null);
 
   // Open Search
@@ -126,6 +132,26 @@ function App() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const handleStartEdit = (message) => {
+    console.log("Edit message:", message);
+  };
+
+  const handleOpenDeleteDialog = (id) => {
+    setOpenDialog(true);
+    setMessageDeleteId(id);
+  };
+
+  const handleClose = () => {
+    setOpenDialog(false);
+    setMessageDeleteId(null);
+  };
+
+  const handleDelete = () => {
+    setMessages((prev) => prev.filter((msg) => msg.id !== messageDeleteId));
+    setMessageDeleteId(null);
+    setOpenDialog(false);
   };
 
   return (
@@ -254,11 +280,50 @@ function App() {
                   <Box
                     sx={{
                       maxWidth: "70%",
+                      position: "relative",
                       display: "flex",
                       flexDirection: "column",
                       alignItems:
                         message.sender === "user" ? "flex-end" : "flex-start",
+
+                      "&:hover .message-actions": {
+                        opacity: 1,
+                      },
                     }}>
+                    {message.sender === "user" && (
+                      <Box
+                        className='message-actions'
+                        sx={{
+                          position: "absolute",
+                          top: -10,
+                          right: message.sender === "user" ? -10 : "auto",
+                          left: message.sender === "user" ? "auto" : -10,
+                          opacity: 0,
+                          transition: "opacity 0.2s ease",
+                          display: "flex",
+                          gap: 0.5,
+                          bgcolor: "#fff",
+                          borderRadius: 1,
+                          boxShadow: 1,
+                          p: 0.25,
+                          zIndex: 1,
+                        }}>
+                        <IconButton
+                          size='small'
+                          onClick={() => handleStartEdit(message)}
+                          sx={{ color: "#1976d2" }}>
+                          <EditIcon fontSize='small' />
+                        </IconButton>
+
+                        <IconButton
+                          size='small'
+                          onClick={() => handleOpenDeleteDialog(message.id)}
+                          sx={{ color: "#d32f2f" }}>
+                          <DeleteIcon fontSize='small' />
+                        </IconButton>
+                      </Box>
+                    )}
+
                     <Paper
                       elevation={1}
                       sx={{
@@ -399,6 +464,27 @@ function App() {
           </Typography>
         </Box>
       </Container>
+
+      <Dialog
+        open={opentDialog}
+        onClose={handleClose}
+        aria-labelledby='alert-dialog-title'
+        aria-describedby='alert-dialog-description'>
+        <DialogTitle id='alert-dialog-title' color='error'>
+          Delete
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id='alert-dialog-description'>
+            Are Sure you want to delete this message?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancle</Button>
+          <Button onClick={handleDelete} autoFocus color='error'>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }
